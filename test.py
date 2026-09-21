@@ -1,11 +1,14 @@
 from dotenv import load_dotenv
-load_dotenv()
-
 from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
+
+load_dotenv()
 
 client = TypeSafeClient()
 
-ticket = "Hi, I've been trying to connect my Stripe account for 3 days and the integration keeps failing. I'm losing sales. Please help ASAP."
+ticket = (
+    "Hi, I've been trying to connect my Stripe account for 3 days and "
+    "the integration keeps failing. I'm losing sales. Please help ASAP."
+)
 
 response = client.system_one(
     state=ticket,
@@ -34,4 +37,4 @@ response = client.system_one(
 
 print(response.answers["department"].choice)  # "technical"
 print(response.answers["frustration"].score)  # 1.0
-print(response.answers["is_urgent"].noul)     # 1.0
+print(response.answers["is_urgent"].noul)  # 1.0

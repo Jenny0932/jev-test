@@ -1,9 +1,10 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 import json
 from pathlib import Path
+
+from dotenv import load_dotenv
 from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
+
+load_dotenv()
 
 client = TypeSafeClient()
 

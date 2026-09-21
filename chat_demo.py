@@ -1,10 +1,11 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 import json
 from pathlib import Path
+
 import gradio as gr
+from dotenv import load_dotenv
 from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
+
+load_dotenv()
 
 client = TypeSafeClient()
 
@@ -31,14 +32,15 @@ INTENT_CATEGORIES = {
     "feedback": "#6B7280",
 }
 
+
 def get_intent_color(intent: str) -> str:
     for prefix, color in INTENT_CATEGORIES.items():
         if intent.startswith(prefix):
             return color
     return "#6B7280"
 
+
 def confidence_bar(score: float) -> str:
-    # score is 0–2 (Score with 3 criteria), normalize to 0–1
     pct = min(score / 2.0, 1.0) * 100
     if pct >= 80:
         bar_color = "#10B981"
@@ -46,12 +48,12 @@ def confidence_bar(score: float) -> str:
         bar_color = "#F59E0B"
     else:
         bar_color = "#EF4444"
-    return f"""
-    <div style="background:#1e293b;border-radius:4px;height:8px;width:100%;margin-top:4px">
-      <div style="background:{bar_color};border-radius:4px;height:8px;width:{pct:.0f}%"></div>
-    </div>
-    <span style="font-size:11px;color:#94a3b8">{pct:.0f}%</span>
-    """
+    return (
+        f'<div style="background:#1e293b;border-radius:4px;height:8px;width:100%;margin-top:4px">'  # noqa: E501
+        f'<div style="background:{bar_color};border-radius:4px;height:8px;width:{pct:.0f}%"></div>'  # noqa: E501
+        f'</div><span style="font-size:11px;color:#94a3b8">{pct:.0f}%</span>'
+    )
+
 
 def detect_and_respond(user_message: str, history: list) -> tuple[list, str]:
     response = client.system_one(
@@ -84,16 +86,21 @@ def detect_and_respond(user_message: str, history: list) -> tuple[list, str]:
     definition = criteria[intent]
 
     if is_ambiguous > 0.6:
-        bot_reply = f"I'm not entirely sure what you're looking for. Could you clarify your request? It might be related to **{intent_label}**, but your message is a bit ambiguous."
+        bot_reply = (
+            f"I'm not entirely sure what you're looking for. Could you clarify? "
+            f"It might be related to **{intent_label}**, but your message is a bit ambiguous."
+        )
     else:
-        bot_reply = f"Got it — this looks like a **{intent_label}** request. {definition} How can I assist you further?"
+        bot_reply = (
+            f"Got it — this looks like a **{intent_label}** request. "
+            f"{definition} How can I assist you further?"
+        )
 
     history = history + [
         {"role": "user", "content": user_message},
         {"role": "assistant", "content": bot_reply},
     ]
 
-    # Build the intent analysis panel
     ambiguous_label = "Yes" if is_ambiguous > 0.5 else "No"
     ambiguous_color = "#EF4444" if is_ambiguous > 0.5 else "#10B981"
 
@@ -132,7 +139,7 @@ def detect_and_respond(user_message: str, history: list) -> tuple[list, str]:
         </div>
       </div>
     </div>
-    """
+    """  # noqa: E501
 
     return history, panel_html
 
@@ -149,19 +156,14 @@ EXAMPLE_MESSAGES = [
 
 with gr.Blocks(title="Banking Intent Detection") as demo:
     gr.Markdown(
-        """
-        # Banking Intent Detection
-        *Powered by [jev](https://jev.ai) via typesafe-sdk — type any banking query to see the detected intent in real time.*
-        """
+        "# Banking Intent Detection\n"
+        "*Powered by [jev](https://jev.ai) via typesafe-sdk"
+        " — type any banking query to see the detected intent in real time.*"
     )
 
     with gr.Row(equal_height=True):
-        with gr.Column(scale=3, elem_classes="chat-col"):
-            chatbot = gr.Chatbot(
-                label="Chat",
-                height=500,
-                show_label=False,
-            )
+        with gr.Column(scale=3):
+            chatbot = gr.Chatbot(label="Chat", height=500, show_label=False)
             with gr.Row():
                 msg_input = gr.Textbox(
                     placeholder="Ask something about your account, cards, loans...",
@@ -169,23 +171,19 @@ with gr.Blocks(title="Banking Intent Detection") as demo:
                     scale=5,
                     submit_btn=True,
                 )
-
-            gr.Examples(
-                examples=EXAMPLE_MESSAGES,
-                inputs=msg_input,
-                label="Try these",
-            )
+            gr.Examples(examples=EXAMPLE_MESSAGES, inputs=msg_input, label="Try these")
 
         with gr.Column(scale=2):
             intent_panel = gr.HTML(
-                value="""
-                <div style="font-family:system-ui,sans-serif;padding:16px;background:#0f172a;border-radius:12px;color:#475569;text-align:center;height:200px;display:flex;align-items:center;justify-content:center;">
-                  <div>
-                    <div style="font-size:32px;margin-bottom:8px;">💬</div>
-                    <div style="font-size:14px;">Send a message to see<br>intent analysis here</div>
-                  </div>
-                </div>
-                """,
+                value=(
+                    '<div style="font-family:system-ui,sans-serif;padding:16px;background:#0f172a;'  # noqa: E501
+                    'border-radius:12px;color:#475569;text-align:center;height:200px;'
+                    'display:flex;align-items:center;justify-content:center;">'
+                    "<div>"
+                    '<div style="font-size:32px;margin-bottom:8px;">💬</div>'
+                    '<div style="font-size:14px;">Send a message to see<br>intent analysis here</div>'  # noqa: E501
+                    "</div></div>"
+                ),
                 label="Intent Analysis",
             )
 
@@ -210,8 +208,5 @@ if __name__ == "__main__":
             neutral_hue="slate",
             font=gr.themes.GoogleFont("Inter"),
         ),
-        css="""
-        .gradio-container { max-width: 1100px !important; }
-        footer { display: none !important; }
-        """,
+        css=".gradio-container { max-width: 1100px !important; } footer { display: none !important; }",  # noqa: E501
     )
